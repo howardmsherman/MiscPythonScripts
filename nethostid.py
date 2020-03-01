@@ -52,11 +52,14 @@ allones = int(pow(2,32)-1)
 hostmask = allones >> netidlen
 netmask = allones  ^ hostmask
 
-ipv4addr_int = int.from_bytes(ipv4addr, byteorder='big', signed=False)
-netid_int = ipv4addr_int & netmask
-netid = netid_int.to_bytes(4, byteorder='big')
-hostid = ipv4addr_int & hostmask
+ipv4addr_int = int.from_bytes(ipv4addr, byteorder='big', signed=False)     	# IP addr as int
+netid_int = ipv4addr_int & netmask											# Netid as int
+netid = netid_int.to_bytes(4, byteorder='big')								# Netid as bytes
+hostid = ipv4addr_int & hostmask											# Hostid as int
+broadcast_int = netid_int | hostmask										# Broadcast as int
+broadcast = broadcast_int.to_bytes(4, byteorder='big')						# Broadcast as bytes
 
-print(f"Netid: {inet_ntoa(netid)}")
-print(f"Hostid: {hostid}")
+print(f"Netid: {inet_ntoa(netid)}")											# Formatted NetID
+print(f"Hostid: {hostid}")													# Hostid
+print(f"Broadcast: {inet_ntoa(broadcast)}")									# Formatted Broadcast
 
