@@ -2,7 +2,7 @@
 
 # Name:     nethostid.py
 #
-# Desc:     given an IPv4 address in CIDR format, compute and print the netid and hostid
+# Desc:     given an IPv4 address in CIDR format, compute and print the netid, hostid and broadcast addr
 #
 # Syntax:   nethostid.py <IPv4 Addr/Mask bits>
 #
@@ -59,7 +59,8 @@ hostid = ipv4addr_int & hostmask											# Hostid as int
 broadcast_int = netid_int | hostmask										# Broadcast as int
 broadcast = broadcast_int.to_bytes(4, byteorder='big')						# Broadcast as bytes
 
-print(f"Netid: {inet_ntoa(netid)}")											# Formatted NetID
-print(f"Hostid: {hostid}")													# Hostid
-print(f"Broadcast: {inet_ntoa(broadcast)}")									# Formatted Broadcast
+print('CIDR Addr:   {:>18s}'.format(cidraddr))							
+print('Netid:       {:>18s}'.format(inet_ntoa(netid)))						
+print('Hostid:      {:>18d}'.format(hostid))					
+print('Broadcast:   {:>18s}'.format(inet_ntoa(broadcast)))			
 
