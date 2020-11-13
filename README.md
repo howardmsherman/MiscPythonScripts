@@ -6,7 +6,7 @@
 ### ifnethost.py
 - takes an interface name as an argument, finds its inet address and calls nethostid.py
 
-``
+```console
 [ec2-user@ip-10-16-126-5 ~]$ ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
