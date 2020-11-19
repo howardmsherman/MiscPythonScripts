@@ -44,4 +44,8 @@ Broadcast:        10.16.127.255
 [ec2-user@ip-10-16-126-5 ~]$ 
 ```
 
-
+### virsh.py
+- A script that is invoked from the Ansible control node in a KVM environment
+- The control node and managed nodes are all KVMs, running in the "localnet.com" domain
+- The hypervisor is running KVM, yet it is defined to the Ansible control node as a managed node (hostname hypervsor)
+- virsh.py allows the control node to startup/shutdown the managed node KVMs, as individual hosts or by group, referencing the Ansible inventory.
