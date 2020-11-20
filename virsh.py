@@ -7,6 +7,7 @@ import sys
 import subprocess
 import argparse
 import json
+import re
 
 # Global variables
 kvm_host = "hypervsor"
@@ -18,6 +19,7 @@ stated_actions = set()
 group = None
 host  = None
 hosts = []
+running_hosts = []
 command = None
 commands = []
 inventory = {}
@@ -64,19 +66,37 @@ if args.list:
 elif args.listall:
     commands.append( ansible + ' ' + kvm_host + ' -b -m virt -a "command=list_vms"')
 else:
+    proc = None
     # Make sure there's an action
     if not action:
         print(f"Error - no action  (--start|--stop|--kill) specified...Execution Aborted")
         sys.exit(101)
+
+    # Get the running hosts (VMs) 
+    command = ansible + ' ' + kvm_host + ' -b -m virt -a "command=list_vms state=running"'
+    try:
+        proc = subprocess.run(command,shell=True,check=True,stdout=subprocess.PIPE)
+        # output has embedded json starting at "{" - need to skip the preceding text
+        output = ''.join(proc.stdout.decode().splitlines())
+        # Hop to the '{'
+        output = output[output.index('{'):]
+        # Now load it as json
+        running_hosts_json = json.loads(output)
+        running_hosts = running_hosts_json['list_vms']
+    except Exception:
+        print(f"Error in Command: {command}...Script Aborted")
+        sys.exit(102)
+    # Strip out the KVM domain
+    running_hosts = [ x.rstrip('.'+kvm_domain) for x in running_hosts ]
+    
     # Grab the ansible inventory
-    proc = None
     command = ansible_inventory + ' --list'
     try:
         proc = subprocess.run(command,shell=True,check=True,stdout=subprocess.PIPE)
         inventory = json.loads(proc.stdout.decode())
     except subprocess.SubprocessError:
         print(f"Error in Command: {command}...Script Aborted")
-        sys.exit(101)
+        sys.exit(103)
 
     # Trim out the '_meta' and 'ungrouped' groups, so they can't be --group arguments
     del inventory['_meta']
@@ -97,19 +117,34 @@ else:
     # If no hosts to process, then the --host|--group argument wasn't found
     if not host_set:
         print(f"Error..host/group not found in inventory...Execution Aborted")
-        sys.exit(102)
+        sys.exit(104)
 
     # Make a list of the host(s) to process
     hosts = sorted(list(host_set))
 
+    # For --start, filter out the hosts that are already running
+    # For --stop|--kill, filter out the hosts that are not running
+    hosts_to_remove = set()
+    #print(f"HOSTS: {hosts}   RUNING_HOSTS: {running_hosts}\n")
+    for host in hosts:
+        #print(f"HOST: {host}   RUNING_HOSTS: {running_hosts}")
+        if args.start and host in running_hosts:
+            print(f"--start specified and {host} already running...bypass")
+            hosts_to_remove.add(host)
+        elif (args.stop or args.kill) and host not in running_hosts:
+            print(f"--stop|--kill specified and {host} not running...bypass")
+            hosts_to_remove.add(host)
+
+    hosts = sorted(list(set(hosts) - set(hosts_to_remove)))
+
+    if not hosts:
+        print(f"No hosts to process...exiting")
+        sys.exit(0)
 
 # Make a list of commands, one for each host
 for host in hosts:
     commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + '.' + kvm_domain  + ' command=' + action + '"')
 # Run the commands
-# "Normal" exceptions (the code doesn't handle at the ansible libvirt module level):
-#     --stop|--kill: libvirt.libvirtError: Requested operation is not valid: domain is not running
-#     --start:       libvirt.libvirtError: Requested operation is not valid: domain is already running
 for command in commands:
     print(command)
     proc = subprocess.run(command,shell=True,check=False)
