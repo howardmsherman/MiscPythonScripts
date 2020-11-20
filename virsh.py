@@ -1,6 +1,26 @@
 #!/usr/bin/env python
 """
 Use the ansible host inventory and the virt module to startup/shutdown VM's thru KVM
+
+With Ansible, the control node can only control managed nodes that are running.
+
+In a small KVM lab environment, though, where the control and managed nodes are all kvms, 
+by defining the KVM host as a managed node, through the Ansible virt module the control
+node can issue commands to startup/shutdown/kill managed nodes.
+
+Furthermore, the ansible-inventory command can be engaged so that commands to the KVM host can be 
+made on behalf of hosts AND groups definied in the inventory.
+
+This script exploits these features so that from the Ansible control node managed nodes can be started/stopped/killed via the KVM host, 
+utilizing KVM's virsh command.
+
+Assumptions:
+  1) All managed nodes are defined to KVM with a common domain, (kvm_domain). They are named to KVM by their FQDNs.
+  2) To Ansible, though, the managed nodes are defined by their hostnames, not their FQDNs. 
+  3) Name resolution by the control node for the managed nodes is done via hostfile entries, ssh config entries, ansible_hostname variables 
+     or some other mechanism so that the nodes can be defined in the Ansible inventory by their hostnames, not their FQDNs.
+  4) The managed nodes to be controlled via this script are defined in all:!ungrouped, i.e. they DO NOT belong to the 'ungrouped' group.
+  5) The Ansible control node and the KVM host node ARE ungrouped, so that they cannot be inadvertently stopped/started/killed by this script.
 """
 
 import sys
