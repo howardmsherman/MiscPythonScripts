@@ -107,9 +107,9 @@ else:
 for host in hosts:
     commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + '.' + kvm_domain  + ' command=' + action + '"')
 # Run the commands
-# "Normal" exceptions (the code hasn't yet been enhanced to dig in at the ansible module level to handle them):
-#     libvirt.libvirtError: Requested operation is not valid: domain is not running
-#     libvirt.libvirtError: Requested operation is not valid: domain is already running
+# "Normal" exceptions (the code doesn't handle at the ansible libvirt module level):
+#     --stop|--kill: libvirt.libvirtError: Requested operation is not valid: domain is not running
+#     --start:       libvirt.libvirtError: Requested operation is not valid: domain is already running
 for command in commands:
     print(command)
     proc = subprocess.run(command,shell=True,check=False)
