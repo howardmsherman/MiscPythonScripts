@@ -125,9 +125,7 @@ else:
     # For --start, filter out the hosts that are already running
     # For --stop|--kill, filter out the hosts that are not running
     hosts_to_remove = set()
-    #print(f"HOSTS: {hosts}   RUNING_HOSTS: {running_hosts}\n")
     for host in hosts:
-        #print(f"HOST: {host}   RUNING_HOSTS: {running_hosts}")
         if args.start and host in running_hosts:
             print(f"--start specified and {host} already running...bypass")
             hosts_to_remove.add(host)
@@ -135,7 +133,7 @@ else:
             print(f"--stop|--kill specified and {host} not running...bypass")
             hosts_to_remove.add(host)
 
-    hosts = sorted(list(set(hosts) - set(hosts_to_remove)))
+    hosts = sorted(list(set(hosts) - hosts_to_remove))
 
     if not hosts:
         print(f"No hosts to process...exiting")
