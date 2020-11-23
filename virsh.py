@@ -21,6 +21,22 @@ Assumptions:
      or some other mechanism so that the nodes can be defined in the Ansible inventory by their hostnames, not their FQDNs.
   4) The managed nodes to be controlled via this script are defined in all:!ungrouped, i.e. they DO NOT belong to the 'ungrouped' group.
   5) The Ansible control node and the KVM host node ARE ungrouped, so that they cannot be inadvertently stopped/started/killed by this script.
+
+Examples:
+  List the running VMs:
+     virsh.py --list
+
+  Startup a host:
+     virsh.py --host centoshost --start
+ 
+  Shutdown a group's hosts:
+     virsh.py --group ubuntugroup --stop
+
+  Kill (ungracefully stop) a host:
+     virsh.py --host myhost --stop
+
+  Shutdown all the hosts in Ansible inventory:
+    virsh.py --group all --stop
 """
 
 import sys
