@@ -118,12 +118,17 @@ else:
         output = output[output.index('{'):]
         # Now load it as json
         running_hosts_json = json.loads(output)
-        running_hosts = running_hosts_json['list_vms']
+        running_hosts_full = running_hosts_json['list_vms']
     except Exception:
         print(f"Error in Command: {command}...Script Aborted")
         sys.exit(102)
-    # Strip out the KVM domain
-    running_hosts = [ x.rstrip('.'+kvm_domain) for x in running_hosts ]
+    # Trim down running hosts' names to match those in Ansible Inventory
+    running_hosts = [ ]
+    for host in running_hosts_full:
+        if host.find('.'+kvm_domain) > -1:              # host name ends in KVM domain?
+            running_hosts.append(host.split('.')[0])    # Yes: strip KVM domain off
+        else:
+            running_hosts.append(host)                  # No: leave host name as is
     
     # Grab the ansible inventory
     command = ansible_inventory + ' --list'
@@ -177,7 +182,10 @@ else:
 
 # Make a list of commands, one for each host
 for host in hosts:
-    commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + '.' + kvm_domain  + ' command=' + action + '"')
+    if host.find('.') == -1:                                                                                                            # '.' in host name?
+        commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + '.' + kvm_domain  + ' command=' + action + '"')     # No: Add on KVM domain
+    else:
+        commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + ' command=' + action + '"')                         # Yes: leave it alone
 # Run the commands
 for command in commands:
     print(command)
