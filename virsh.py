@@ -124,11 +124,11 @@ else:
         sys.exit(102)
     # Trim down running hosts' names to match those in Ansible Inventory
     running_hosts = [ ]
-    for host in running_hosts_full:
-        if host.find('.'+kvm_domain) > -1:              # host name ends in KVM domain?
-            running_hosts.append(host.split('.')[0])    # Yes: strip KVM domain off
+    for running_host in running_hosts_full:
+        if running_host.find('.'+kvm_domain) > -1:              # host name ends in KVM domain?
+            running_hosts.append(running_host.split('.')[0])    # Yes: strip KVM domain off
         else:
-            running_hosts.append(host)                  # No: leave host name as is
+            running_hosts.append(running_host)                  # No: leave host name as is
     
     # Grab the ansible inventory
     command = ansible_inventory + ' --list'
