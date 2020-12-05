@@ -33,7 +33,7 @@ Examples:
      virsh.py --group ubuntugroup --stop
 
   Kill (ungracefully stop) a host:
-     virsh.py --host myhost --stop
+     virsh.py --host myhost --kill
 
   Shutdown all the hosts in Ansible inventory:
     virsh.py --group all --stop
@@ -54,19 +54,19 @@ action = None
 stated_actions = set()
 group = None
 host  = None
-hosts = []
+hosts_list = []
 running_hosts = []
 command = None
 commands = []
 inventory = {}
 
-def addHosts(group,host_set):
+def addHosts(group,hosts_to_process):
     if 'children' in inventory[group]:
         for subgroup in inventory[group]['children']:
-            addHosts(subgroup,host_set)
+            addHosts(subgroup,hosts_to_process)
     elif 'hosts' in inventory[group]:
         for host in inventory[group]['hosts']:
-            host_set.add(host)
+            hosts_to_process.add(host)
 
 parser = argparse.ArgumentParser(description='virsh KVM processing of hosts in ansible inventory')
 parser.add_argument('--group')
@@ -149,24 +149,24 @@ else:
     addHosts('all',all_hosts)
 
     # Get the host(s) to process from the --host|--group argument
-    host_set = set()
+    hosts_to_process = set()
     if host and host in all_hosts:
-        host_set.add(host)       
+        hosts_to_process.add(host)       
     elif group and group in inventory.keys():
-        addHosts(group,host_set)
+        addHosts(group,hosts_to_process)
 
     # If no hosts to process, then the --host|--group argument wasn't found
-    if not host_set:
+    if not hosts_to_process:
         print(f"Error..host/group not found in inventory...Execution Aborted")
         sys.exit(104)
 
     # Make a list of the host(s) to process
-    hosts = sorted(list(host_set))
+    hosts_list = sorted(list(hosts_to_process))
 
     # For --start, filter out the hosts that are already running
     # For --stop|--kill, filter out the hosts that are not running
     hosts_to_remove = set()
-    for host in hosts:
+    for host in hosts_list:
         if args.start and host in running_hosts:
             print(f"--start specified and {host} already running...bypass")
             hosts_to_remove.add(host)
@@ -174,14 +174,14 @@ else:
             print(f"--stop|--kill specified and {host} not running...bypass")
             hosts_to_remove.add(host)
 
-    hosts = sorted(list(set(hosts) - hosts_to_remove))
+    hosts_list = sorted(list(set(hosts_list) - hosts_to_remove))
 
-    if not hosts:
+    if not hosts_list:
         print(f"No hosts to process...exiting")
         sys.exit(0)
 
 # Make a list of commands, one for each host
-for host in hosts:
+for host in hosts_list:
     if host.find('.') == -1:                                                                                                            # '.' in host name?
         commands.append(ansible + ' ' + kvm_host + ' -b -m virt -a "name=' + host + '.' + kvm_domain  + ' command=' + action + '"')     # No: Add on KVM domain
     else:
