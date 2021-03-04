@@ -11,7 +11,6 @@
 from argparse import ArgumentParser
 from socket import inet_aton, inet_ntoa
 from sys import exit
-from math import pow
 
 def badCIDRaddr():
     print(f"Error: not a valid IPv4 address in CIDR '<IP Addr>/<netid length>' format: {cidraddr}")
@@ -48,7 +47,7 @@ if netidlen < 8 or netidlen > 31:
     badCIDRaddr()
 
 # Get the bit masks for the NetID and the HostID
-allones = int(pow(2,32)-1)
+allones = 2**32-1
 hostmask = allones >> netidlen
 netmask = allones  ^ hostmask
 
